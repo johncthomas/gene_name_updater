@@ -21,11 +21,12 @@ def _load_data():
 symbol_ids_table, alt_symbols, approved = _load_data()
 
 def hgnc_approved_symbol(g, null=np.nan):
+    """"""
     if g in approved:
         return g
     try:
         found = alt_symbols[g]
-        if type(found) is list:
+        if type(found) is np.ndarray:
             LOG.info(f"{g} is ambiguous, maps to {found}.")
         return found
     except KeyError:
@@ -94,7 +95,7 @@ def update_lookup_lists(hgnc_table_path):
             ag = np.array([ag])
         if type(pg) != np.ndarray:
             pg = np.array([pg])
-        comb = list(np.concatenate((ag, pg)))
+        comb = np.concatenate((ag, pg))
         # crossed genes added to a list and the mappings both go to the list
         am.loc[g] = comb
         pm.loc[g] = comb
@@ -105,9 +106,10 @@ def update_lookup_lists(hgnc_table_path):
     both = {**am, **pm}
     approved_set = set(approved_hgnc)
 
-    # get ID table
+    # get ID table, mapping approved symbol to IDs provided by HGNC, inc NCBI and Ensembl
     symbol_ids_table = hgnctab.drop_duplicates('Approved_symbol').set_index('Approved_symbol', drop=False)
     symbol_ids_table = symbol_ids_table.drop(['Approved_name','Previous_symbol','Alias_symbol'], 1)
+    # cast the NCBI ids as int then strings to remove decimal point (they'll still get read as floats on the other end)
     symbol_ids_table.loc[:, 'NCBI_gene_ID'] = symbol_ids_table.NCBI_gene_ID[~symbol_ids_table.NCBI_gene_ID.isna()].apply(lambda x: str(int(x)))
 
     # write the outputs
@@ -123,5 +125,5 @@ def test():
     genes = ['ASP', 'APOBEC1CF', 'XRCC1', 'MRE11A', 'not a gene']
     print([hgnc_approved_symbol(g) for g in genes])
 
-#update_lookup_lists('data/hgnc_table.20210702.tsv')
+update_lookup_lists('data/hgnc_table.20210702.tsv')
 #test()
