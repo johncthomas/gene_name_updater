@@ -9,8 +9,10 @@ import gzip
 from time import sleep
 import logging, shutil
 LOG = logging.getLogger('entrez_converter')
+LOG.setLevel('WARNING')
 
 # todo WITHDRAWN is a thing, different from discontinued?
+# todo do something better with multiple hits? Currently returns nothing.
 
 """
 efetch for 101362076 includes:
@@ -23,7 +25,7 @@ Gene-commentary_label:  WITHDRAWN
 ]"""
 # todo sort out how discontinued is dealt with
 
-setUrEmail = 'Use HGNC_converter.entrez.set_Entrez_email("yourmail@here.com") before searching'
+setUrEmail = 'Use gene_name_updater.ncbi.set_Entrez_email("yourmail@here.com") before searching'
 print(setUrEmail)
 
 fn_oldId = resource_filename(__name__, "data/NCBI_oldId_to_newId.csv")
@@ -136,9 +138,6 @@ def entrez_name_id(query, fullResultsOnFail=False, null_value ='', extra_sleep=0
     discontinued = False
     LOG.debug('IDs = {}'.format(ids) )
     for idd in ids:
-
-        give_up = False
-
         handle = Entrez.efetch(db='gene', id=idd, retmode='xml')
         sleep(extra_sleep)
         res = Entrez.read(handle)
