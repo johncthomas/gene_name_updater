@@ -3,7 +3,8 @@ from .ncbi import entrez_name_id
 import pandas as pd
 import numpy as np
 
-def map_and_ambig(gset:np.ndarray, nan_when_missing=True) -> dict:
+# this should just return a single DF, with 3rd col indicating status, i.e. MISSING/ENTREZ/HGNC/NOCHANGE
+def update_gene_symbols(gset:np.ndarray, nan_when_missing=True) -> dict:
     """Returns a map of original names to udpated, array of ambiguous names,
     and array of genes not found in HGNC or Entrez databases.
 
