@@ -125,5 +125,5 @@ def test():
     genes = ['ASP', 'APOBEC1CF', 'XRCC1', 'MRE11A', 'not a gene']
     print([hgnc_approved_symbol(g) for g in genes])
 
-update_lookup_lists('data/hgnc_table.20210702.tsv')
+# update_lookup_lists('data/hgnc_table.20210702.tsv')
 #test()
