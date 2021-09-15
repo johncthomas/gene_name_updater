@@ -4,9 +4,9 @@ from setuptools import setup, find_packages
 here = path.abspath(path.dirname(__file__))
 
 def main():
-    setup(name='HGNC_converter',
+    setup(name='gene_name_updater',
           version='0.1.1',
-          description='Get HGNC symbols, id, etc from obsolete symbols',
+          description='Update gene symbols from HGNC and Entrez databases.',
           packages=find_packages(),
           install_requires=['pandas', 'biopython'],
           include_package_data=True,
