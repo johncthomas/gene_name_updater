@@ -38,3 +38,4 @@ def update_gene_symbols(gset:np.ndarray, nan_when_missing=True) -> dict:
     no_hits = found.index[nfm].values
     found.loc[nfm] = found.index[nfm].values
     return {'genes':found, 'ambiguous':ambiguous, 'no_hits':no_hits}
+
