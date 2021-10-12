@@ -1,10 +1,12 @@
+
+
 from .hgnc import hgnc_approved_symbol, symbol_ids_table
 from .ncbi import entrez_name_id
 import pandas as pd
 import numpy as np
 
 # this should just return a single DF, with 3rd col indicating status, i.e. MISSING/ENTREZ/HGNC/NOCHANGE
-def update_gene_symbols(gset:np.ndarray, nan_when_missing=True) -> dict:
+def update_gene_symbols(gset:np.ndarray) -> dict:
     """Returns a map of original names to udpated, array of ambiguous names,
     and array of genes not found in HGNC or Entrez databases.
 
@@ -17,15 +19,8 @@ def update_gene_symbols(gset:np.ndarray, nan_when_missing=True) -> dict:
 
     Final Series has original name when no other is found"""
 
-    if nan_when_missing:
-        initval = np.nan
-    else:
-        initval = gset
+    found = pd.Series(gset, index=gset).apply(hgnc_approved_symbol)
 
-    found = pd.Series(initval, index=gset).apply(hgnc_approved_symbol)
-    # # any nontargeting that have slipped through
-    # nts = list(map(is_ntctrl, gset))
-    # found.loc[nts] = 'Non-targeting'
     ambiguous = found.loc[found.apply(lambda x: (type(x) is list) or (type(x) is np.ndarray))].index
     print('Ambiguous:', len(ambiguous))
     # try NCBI
