@@ -1,12 +1,12 @@
 
 
 from .hgnc import hgnc_approved_symbol, symbol_ids_table
-from .ncbi import entrez_name_id
+from .ncbi import entrez_name_id, set_Entrez_email
 import pandas as pd
 import numpy as np
 
 # this should just return a single DF, with 3rd col indicating status, i.e. MISSING/ENTREZ/HGNC/NOCHANGE
-def update_gene_symbols(gset:np.ndarray) -> dict:
+def update_gene_symbols(gset:np.ndarray, email=None) -> dict:
     """Returns a map of original names to udpated, array of ambiguous names,
     and array of genes not found in HGNC or Entrez databases.
 
@@ -17,7 +17,16 @@ def update_gene_symbols(gset:np.ndarray) -> dict:
             to HGNC database.
         'no_hits': Genes not found in either the HGNC or NCBI databases.
 
-    Final Series has original name when no other is found"""
+    Final Series has original name when no other is found
+
+    Args:
+        gset: the genes one wishes to be updated
+        email: your email to be used when querying NCBI
+
+    """
+
+    if email:
+        set_Entrez_email(email)
 
     found = pd.Series(gset, index=gset).apply(hgnc_approved_symbol)
 
