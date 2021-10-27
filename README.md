@@ -1,5 +1,5 @@
 # gene_name_updater
-For updating old gene symbols to the latest approved symbols.
+For updating old human gene symbols to the latest approved symbols.
 
 Functions/tables (command line interface may come later):
   
