@@ -5,7 +5,7 @@ here = path.abspath(path.dirname(__file__))
 
 def main():
     setup(name='gene_name_updater',
-          version='0.1.1',
+          version='0.2',
           description='Update gene symbols from HGNC and Entrez databases.',
           packages=find_packages(),
           install_requires=['pandas', 'biopython'],
