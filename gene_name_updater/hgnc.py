@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-import pkg_resources
+from datetime import datetime
+import requests
 from pkg_resources import resource_filename
 from logging import Logger, INFO, CRITICAL, WARNING
 import pickle
@@ -21,7 +22,8 @@ def _load_data():
 symbol_ids_table, alt_symbols, approved = _load_data()
 
 def hgnc_approved_symbol(g, null=np.nan):
-    """"""
+    """Return HGNC approved symbol for query if it's found in the
+    previous or alias lists. Return null if not"""
     if g in approved:
         return g
     try:
@@ -34,7 +36,34 @@ def hgnc_approved_symbol(g, null=np.nan):
         return null
 
 
+def update_hgnc_table(run_update_lookup_lists=True):
+    """Download a table from biomart.genenames.org and update file
+    used in mapping gene symbols.
+
+    The table is written to data directory by default. Table written
+    to data/hgnc_table.{YYYYMMDD}.tsv. update_lookup_lists then
+    used to update the symbol mapping files."""
+
+    # download from biomart
+    restxml = """<!DOCTYPE Query><Query client="biomartclient" processor="TSV" limit="-1" header="1"><Dataset name="hgnc_gene_mart" config="hgnc_gene_config"><Filter name="hgnc_gene__status_1010" value="Approved" filter_list=""/><Attribute name="hgnc_gene__hgnc_gene_id_1010"/><Attribute name="hgnc_gene__approved_symbol_1010"/><Attribute name="hgnc_gene__approved_name_1010"/><Attribute name="hgnc_gene__hgnc_alias_symbol__alias_symbol_108"/><Attribute name="hgnc_gene__hgnc_previous_symbol__previous_symbol_1012"/><Attribute name="hgnc_gene__chromosome_1010"/><Attribute name="hgnc_gene__locus_group_1010"/><Attribute name="hgnc_gene__locus_type_1010"/><Attribute name="hgnc_gene__hgnc_family__hgnc_family_name_109"/><Attribute name="hgnc_gene__date_symbol_changed_1010"/><Attribute name="hgnc_gene__ensembl_gene__ensembl_gene_id_104"/><Attribute name="hgnc_gene__ncbi_gene__gene_id_1026"/><Attribute name="hgnc_gene__uniprot__uniprot_accession_1036"/></Dataset></Query>"""
+    res = requests.get(f'http://biomart.genenames.org/martservice/results?query={restxml}')
+    if res.status_code != 200:
+        raise RuntimeError(f"Download from biomart.genenames.org failed with code {res.status_code}.")
+
+    # write the file
+    out_fn =  f"data/hgnc_table.{datetime.today().strftime('%Y%m%d')}.tsv"
+    out_fn = resource_filename(__name__, out_fn)
+    with open(out_fn, 'w') as f:
+        f.write(res.text)
+
+    if run_update_lookup_lists:
+        update_lookup_lists(out_fn)
+
+
 def update_lookup_lists(hgnc_table_path):
+    """Using a table downloaded from HGNC, update the look up lists
+    used to quickly map queries to symbols."""
+    global symbol_ids_table, alt_symbols, approved
 
     hgnctab = pd.read_csv(hgnc_table_path, '\t', )
     hgnctab.columns = hgnctab.columns.map(lambda x: x.replace(' ', '_'))
@@ -119,11 +148,16 @@ def update_lookup_lists(hgnc_table_path):
         with open(resource_filename(__name__, f"data/{fn}"), 'wb') as f:
             pickle.dump(obj, f)
 
-def test():
+    symbol_ids_table, alt_symbols, approved = _load_data()
+
+def test_lookup():
     LOG.setLevel('INFO')
     # ambiguous, alias, correct, previous, missing
-    genes = ['ASP', 'APOBEC1CF', 'XRCC1', 'MRE11A', 'not a gene']
+    genes = ['ASP', 'APOBEC1CF', 'XRCC1', 'MRE11A', 'FAM155B', 'not a gene']
     print([hgnc_approved_symbol(g) for g in genes])
 
 # update_lookup_lists('data/hgnc_table.20210702.tsv')
-#test()
+# test_lookup()
+if __name__ == '__main__':
+    input("Press enter to update tables, or ctrl-C to cancel.")
+    update_hgnc_table()

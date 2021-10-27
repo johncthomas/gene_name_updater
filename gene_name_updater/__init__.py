@@ -1,9 +1,21 @@
-
-
-from .hgnc import hgnc_approved_symbol, symbol_ids_table
-from .ncbi import entrez_name_id, set_Entrez_email
+from .hgnc import hgnc_approved_symbol, symbol_ids_table, update_hgnc_table
+from .ncbi import entrez_name_id, set_Entrez_email, update_ncbiOldIdTable
 import pandas as pd
 import numpy as np
+from pkg_resources import resource_filename
+import os
+
+
+
+
+if not os.path.isfile(resource_filename(__name__, "data/symbol_ids_table.csv")):
+    print('Creating lookup tables, might take a couple of minutes')
+    update_hgnc_table()
+if not os.path.isfile(resource_filename(__name__, "data/NCBI_oldId_to_newId.csv")):
+    print('Downloading and pruning discontinued Entrez ID list, '
+          'might take a few more minutes')
+    update_ncbiOldIdTable()
+
 
 # this should just return a single DF, with 3rd col indicating status, i.e. MISSING/ENTREZ/HGNC/NOCHANGE
 def update_gene_symbols(gset:np.ndarray, email=None) -> dict:

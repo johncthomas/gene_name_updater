@@ -1,5 +1,6 @@
 import typing
-
+from io import BytesIO
+from urllib.request import urlopen
 from pkg_resources import resource_filename
 
 import pandas as pd
@@ -36,8 +37,12 @@ def load_oldIdTable(path):
 load_oldIdTable(fn_oldId)
 
 
-def update_ncbiOldIdTable(gene_history_filepath):
-    """Download file from https://ftp.ncbi.nih.gov/gene/DATA/gene_history.gz
+def update_ncbiOldIdTable():
+    """
+
+    Downloads file https://ftp.ncbi.nih.gov/gene/DATA/gene_history.gz, filters
+    for human genes and writes the output. This
+
     Overwrites file to package data folder as NCBI_oldId_to_newId.csv, old one
     is backed up as to NCBI_oldId_to_newId.csv.old. If function fails the new
     file will be incomplete.
@@ -47,27 +52,26 @@ def update_ncbiOldIdTable(gene_history_filepath):
     # remember to check any changes here against all times ncbiOldIdTable is used
     global ncbiOldIdTable
 
-    shutil.copy(fn_oldId, fn_oldId+'.old')
+    try:
+        shutil.copy(fn_oldId, fn_oldId+'.old')
+    except FileNotFoundError:
+        pass
     print('Writing to', fn_oldId)
 
-    isgz = gene_history_filepath.endswith('.gz')
-    if isgz:
-        opener = gzip.open
-    else:
-        opener = open
+    response = urlopen('https://ftp.ncbi.nih.gov/gene/DATA/gene_history.gz')
+    reader = gzip.open(BytesIO(response.read()), 'r')
 
-    with opener(gene_history_filepath, 'r') as f:
+    with reader as f:
         header = next(f)
-        if isgz:
-            header = header.decode('utf-8')
+        header = header.decode('utf-8')
         if header != '#tax_id	GeneID	Discontinued_GeneID	Discontinued_Symbol	Discontinue_Date\n':
             print(header)
             raise RuntimeError("They've changed the header, check it. New file Not created.")
         with open(fn_oldId, 'w') as out_f:
             out_f.write('OldId,GeneId\n')
             for line in f:
-                if isgz:
-                    line = line.decode('utf-8')
+
+                line = line.decode('utf-8')
                 spline = line.split('\t')
                 if spline[0] == '9606':
                     if spline[1] == '-':
@@ -231,18 +235,6 @@ def run_test():
     return results
 
 if __name__ == '__main__':
-    set_Entrez_email("jct61@cam.ac.uk")
+    input("Press enter to update NCBI discontinued table, or ctrl-C to cancel.")
+    update_ncbiOldIdTable()
 
-    loghnd = logging.StreamHandler()
-    loghnd.setLevel(logging.DEBUG)
-    LOG.addHandler(loghnd)
-    #LOG.setLevel(logging.DEBUG)
-    #n = getEntrezNameId('Trp53')
-
-    #LOG.info('aaaa')
-    #__doBigList()
-
-    import pickle
-    missing_genes = pickle.load(open('/Users/johnc.thomas/tmp/missing_genes.pickle', 'rb'))
-    missing_genes.map(entrez_name_id)
-    #print(n)
