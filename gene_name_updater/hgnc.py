@@ -11,6 +11,10 @@ LOG = Logger(__name__)
 
 def _load_data():
     symbol_ids_table = pd.read_csv(resource_filename(__name__, "data/symbol_ids_table.csv"))
+    # convert the NCBI ids to strings to avoid float issue
+    s = symbol_ids_table.NCBI_gene_ID.fillna(-1).astype(int).astype(str)
+    s[s=='-1'] = ''
+    symbol_ids_table['NCBI_gene_ID'] = s
     _objs = {}
     for fn in ['alt_symbols.dict', 'approved.set']:
         with open(resource_filename(__name__, f"data/{fn}", ), 'rb') as f:

@@ -14,6 +14,7 @@ LOG.setLevel('WARNING')
 
 # todo WITHDRAWN is a thing, different from discontinued?
 # todo do something better with multiple hits? Currently returns nothing.
+# todo sort out how discontinued is dealt with
 
 """
 efetch for 101362076 includes:
@@ -24,7 +25,7 @@ Entrezgene_comments:
 Gene-commentary_heading:  RefSeq Status
 Gene-commentary_label:  WITHDRAWN
 ]"""
-# todo sort out how discontinued is dealt with
+
 
 setUrEmail = 'Use gene_name_updater.ncbi.set_Entrez_email("yourmail@here.com") before searching'
 print(setUrEmail)
@@ -147,6 +148,7 @@ def entrez_name_id(query, fullResultsOnFail=False, null_value ='', extra_sleep=0
         res = Entrez.read(handle)
         reses.append(res)
         # if the id is discontinued, get the new one
+        # **this should use Gene-track_status
         if 'Gene-track_discontinue-date' in res[0]['Entrezgene_track-info']['Gene-track']:
             discontinued = True
             #newId = newIdWhenDiscontinued(res[0])
