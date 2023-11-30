@@ -4,8 +4,8 @@ from setuptools import setup, find_packages
 here = path.abspath(path.dirname(__file__))
 
 def main():
-    setup(name='gene_name_updater',
-          version='0.2',
+    setup(name='gene_symbol_updater',
+          version='0.2.1',
           description='Update gene symbols from HGNC and Entrez databases.',
           packages=find_packages(),
           install_requires=['pandas', 'biopython'],
